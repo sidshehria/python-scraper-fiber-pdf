@@ -10,9 +10,7 @@ def _get_cable_description(text: str) -> str:
     return "N/A"
 
 def _get_value_from_table(text: str, fiber_counts: List[str], current_fc: str, parameter: str) -> Optional[str]:
-    """
-    Extracts a parameter's value for a specific fiber count from a table.
-    """
+    """Extracts a parameter's value for a specific fiber count from a table."""
     lines = text.split('\n')
     header_index = -1
     col_map = {}
@@ -52,52 +50,93 @@ def _get_generic_value(text: str, parameter: str, patterns: List[str]) -> str:
         if match: return match.group(1).strip()
     return "N/A"
 
-def _get_cable_type(text: str, fc: str, fiber_counts: list) -> str:
-    """Determines if the cable is Unitube (UT) or Multitube (MT)."""
-    if "Unitube" in text: return "UT"
-    if "Multitube" in text: return "MT"
-    
-    num_tubes_str = _get_value_from_table(text, fiber_counts, fc, "Number of loose tubes")
-    if num_tubes_str and num_tubes_str.isdigit():
-        return "UT" if int(num_tubes_str) == 1 else "MT"
+def _get_tube_type(text: str) -> str:
+    """Determines if the cable is Unitube or Multitube."""
+    if "Unitube" in text: return "Unitube"
+    if "Multitube" in text: return "Multitube"
     match = re.search(r"Number of loose tubes\s*.*?(\d+)", text, re.IGNORECASE)
-    if match: return "UT" if int(match.group(1)) == 1 else "MT"
+    if match: return "Unitube" if int(match.group(1)) == 1 else "Multitube"
     return "N/A"
 
-def _get_fiber_type(text: str, fc: str, fiber_counts: list) -> str:
-    """Determines if the fiber is Single-Mode (SM) or Multi-Mode (MM)."""
-    ft_str = _get_value_from_table(text, fiber_counts, fc, "Fibre Type")
-    if ft_str is None:
-        match = re.search(r"Fibre Type\s*\"?([^\n\"]*G\.65\d[^\n\"]*|OM\d)", text, re.IGNORECASE)
-        ft_str = match.group(1) if match else ""
-    if "G.65" in ft_str or "G.65" in text: return "SM"
-    if "OM" in ft_str or "OM" in text: return "MM"
+def _get_raw_fiber_type(text: str) -> str:
+    """Gets the specific fiber standard like G.652D."""
+    match = re.search(r"Fibre Type\s*\"?([^\n\"]*G\.65\d[^\n\"]*|OM\d)", text, re.IGNORECASE)
+    if match:
+        return match.group(1).strip().replace('$', '').replace('"', '')
     return "N/A"
+
+def _get_environmental_performance(text: str) -> str:
+    """Extracts the environmental performance data."""
+    match = re.search(r"Environmental Performance\s*([\s\S]*?)IEC-60794-1-22-F1", text)
+    if not match:
+        return "N/A"
+    
+    block = match.group(1)
+    lines = [line.strip() for line in block.split('\n') if line.strip()]
+    
+    # Extract temperatures and their conditions
+    conditions = {}
+    for i in range(len(lines)):
+        if '°C' in lines[i]:
+            temp_range = lines[i]
+            # Condition is usually the next line
+            if i + 1 < len(lines):
+                condition = lines[i+1].capitalize()
+                conditions[condition] = temp_range
+
+    return '  '.join([f"{k} {v}" for k, v in conditions.items()])
+
+def _get_tube_colors(text: str) -> str:
+    """Extracts the tube color coding."""
+    match = re.search(r"Tube Colour\s*.*\n\s*([\w\s,]+)\n", text, re.IGNORECASE)
+    if match:
+        colors = [color.strip() for color in re.split(r'\s{2,}|,', match.group(1).strip()) if color]
+        return ", ".join(colors)
+    return "N/A"
+
+def _build_descriptive_strings(text: str, base_description: str, fc: str) -> (str, str):
+    """Builds the detailed cableDescription and typeofCable strings."""
+    keywords = []
+    if "Indoor" in text: keywords.append("Indoor")
+    if "LSZH" in text: keywords.append("LSZH")
+    if "Armoured" in text: keywords.append("armoured")
+    
+    tube_type = _get_tube_type(text)
+    if tube_type == "Unitube":
+        keywords.append("unitube")
+    elif tube_type == "Multitube":
+        keywords.append("loose-tube")
+
+    keywords.append("cable")
+    typeofCable_str = " ".join(keywords).capitalize()
+    
+    # Build main description
+    desc_suffix = "Fibre Loose Tube" if "loose-tube" in typeofCable_str.lower() else "Fibre Cable"
+    cableDescription_str = f"{fc}F {base_description.replace(f'{fc}F','').strip()} {desc_suffix}"
+    
+    return cableDescription_str, typeofCable_str
 
 def _parse_single_datasheet(filename: str, text: str) -> List[Dict[str, Any]]:
     """Parses text from a single datasheet, returning a list of cable data dicts."""
     results = []
-    cable_description = _get_cable_description(text)
+    base_description = _get_cable_description(text)
     
-    # --- FIX: Improved fiber count detection logic ---
-    # Step 1: Extract numbers from the title (e.g., "24/48/96F...")
-    title_fcs = []
-    title_match = re.match(r'([\d/]+)F', cable_description)
-    if title_match:
-        title_fcs = re.findall(r'\d+', title_match.group(1))
-
-    # Step 2: Find all occurrences of "XXF" in the entire document text.
+    title_fcs = re.findall(r'\d+', re.split(r'[a-zA-Z]', base_description)[0])
     text_fcs = re.findall(r'(\d+)F', text)
-    
-    # Step 3: Combine, remove duplicates, and sort.
     fiber_counts = sorted(list(set(title_fcs + text_fcs)), key=int)
-    # --- END FIX ---
 
     if not fiber_counts: return []
 
+    # Common values for the whole document
+    raw_fiber_type = _get_raw_fiber_type(text)
+    env_conditions = _get_environmental_performance(text)
+    tube_colors = _get_tube_colors(text)
+    tube_type_str = _get_tube_type(text)
+
     for fc in fiber_counts:
-        tensile_patterns = [r"[\s\S]*?Installation\s*:\s*(\d+\s*N)", r"[\s\S]*?Short Term\s*:\s*(\d+\s*N)", r"[\s\S]*?(\d+\s*N)"]
-        crush_patterns = [r"[\s\S]*?(\d+\s*N/\d+\s*x?\s*\d*\s*cm)", r"[\s\S]*?(\d+\s*N/\d+\s*x?\s*\d*\s*mm)", r"[\s\S]*?(\d+\s*N)"]
+        tensile_patterns = [r"[\s\S]*?(?:Installation|Short Term)\s*[:\s]*(\d+\s*N)", r"[\s\S]*?(\d+\s*N)"]
+        crush_patterns = [r"[\s\S]*?(\d+\s*N[/0-9\s.xcm]+)", r"[\s\S]*?(\d+\s*N)"]
+        
         tensile = _get_value_from_table(text, fiber_counts, fc, 'Tensile Strength') or _get_generic_value(text, 'Tensile Strength', tensile_patterns)
         crush = _get_value_from_table(text, fiber_counts, fc, 'Crush Resistance') or _get_generic_value(text, 'Crush Resistance', crush_patterns)
         diameter = _get_value_from_table(text, fiber_counts, fc, 'Cable Diameter')
@@ -106,28 +145,32 @@ def _parse_single_datasheet(filename: str, text: str) -> List[Dict[str, Any]]:
             match = re.search(r"Cable Diameter\s*.*?(\d+\.\d+\s*±\s*\d+\.\d+\s*mm)", text, re.IGNORECASE)
             if match: diameter = match.group(1)
 
+        cableDesc, typeofCable = _build_descriptive_strings(text, base_description, fc)
+
         data = {
-            "cableID": 0, "cableDescription": f"{fc}F {re.sub(r'^[0-9/F\\s]+', '', cable_description)}",
-            "fiberCount": fc, "typeofCable": _get_cable_type(text, fc, fiber_counts),
-            "span": "N/A", "tube": "Standard",
-            "tubeColorCoding": next(iter(re.findall(r"(ΕΙΑ/ΤΙΑ\s*-\s*598|DIN VDE 0888)", text)), "N/A"),
-            "fiberType": _get_fiber_type(text, fc, fiber_counts), "diameter": diameter, "tensile": tensile,
-            "nescCondition": "N/A", "crush": crush, "blowingLength": "N/A",
-            "datasheetURL": filename, "isActive": "Y"
+            "cableID": 0,
+            "cableDescription": cableDesc,
+            "fiberCount": f"{fc}F",
+            "typeofCable": typeofCable,
+            "span": "N/A",
+            "tube": tube_type_str,
+            "tubeColorCoding": tube_colors,
+            "fiberType": raw_fiber_type,
+            "diameter": diameter.replace('*', '±') if diameter else "N/A",
+            "tensile": tensile,
+            "nescCondition": env_conditions,
+            "crush": crush.replace('$', '') if crush else "N/A",
+            "blowingLength": "N/A",
+            "datasheetURL": filename,
+            "isActive": "Y"
         }
         results.append(data)
     return results
 
 def parse_datasheets(files: Dict[str, str]) -> List[Dict[str, Any]]:
-    """
-    Main function to parse multiple datasheet files.
-    Args:
-        files: A dictionary of {filename: file_text_content}.
-    Returns:
-        A list of dictionaries, with each dictionary representing a cable variant.
-    """
+    """Main function to parse multiple datasheet files."""
     all_cables = []
-    current_id = 1
+    current_id = 0
     for filename, content in files.items():
         try:
             parsed_cables = _parse_single_datasheet(filename, content)
