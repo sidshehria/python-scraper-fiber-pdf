@@ -1,0 +1,17 @@
+{
+  "cableID": 5,
+  "cableDescription": "144F  Multitube Micro OFC",
+  "fiberCount": "144",
+  "typeofCable": "MT",
+  "span": "N/A",
+  "tube": "Standard",
+  "tubeColorCoding": "DIN VDE 0888",
+  "fiberType": "SM",
+  "diameter": "Cable Diameter 7.9 \u00b1 0.3 mm",
+  "tensile": "Tensile Strength Short Term: 1500 N IEC-60794-1-21-E1",
+  "nescCondition": "N/A",
+  "crush": "Crush Resistance 1000 N/10 cm IEC-60794-1-21-E3",
+  "blowingLength": "N/A",
+  "datasheetURL": "Datasheet - 144F A1 & D MT MICRO SS PE BK - 7.9 mm.pdf",
+  "isActive": "Y"
+}

@@ -1,0 +1,17 @@
+{
+  "cableID": 7,
+  "cableDescription": "48F  Multitube Unarmoured OFC \u2013 Anti Termite & Anti Rodent",
+  "fiberCount": "48",
+  "typeofCable": "MT",
+  "span": "N/A",
+  "tube": "Standard",
+  "tubeColorCoding": "N/A",
+  "fiberType": "SM",
+  "diameter": "Cable Diameter 12.0 \u00b1 0.5 mm 12.0 \u00b1 0.5 mm 13.2 \u00b1 0.5 mm",
+  "tensile": "Tensile Strength - Installation IEC-60794-1-21-E1",
+  "nescCondition": "N/A",
+  "crush": "Crush Resistance 4000 N/100 x 100 mm IEC-60794-1-21-E3",
+  "blowingLength": "N/A",
+  "datasheetURL": "Datasheet - 24,48,96F MT UA DS LSZH GY PE  .pdf",
+  "isActive": "Y"
+}

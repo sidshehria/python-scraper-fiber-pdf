@@ -1,0 +1,17 @@
+{
+  "cableID": 9,
+  "cableDescription": "288F  Multitube Micro OFC",
+  "fiberCount": "288",
+  "typeofCable": "MT",
+  "span": "N/A",
+  "tube": "Standard",
+  "tubeColorCoding": "DIN VDE 0888",
+  "fiberType": "SM",
+  "diameter": "Cable Diameter 8.0 \u00b1 0.3 mm",
+  "tensile": "Tensile Strength (max.) 1000 N IEC-60794-1-21-E1",
+  "nescCondition": "N/A",
+  "crush": "Crush Resistance 500 N/10 cm IEC-60794-1-21-E3",
+  "blowingLength": "N/A",
+  "datasheetURL": "Datasheet - 288F  MT MICRO SS LSZH BK - 8.0 mm - 12FT.pdf",
+  "isActive": "Y"
+}

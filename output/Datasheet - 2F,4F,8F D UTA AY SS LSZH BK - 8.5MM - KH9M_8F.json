@@ -1,0 +1,17 @@
+{
+  "cableID": 12,
+  "cableDescription": "8F  Unitube Armoured OFC \u2013 KH9M",
+  "fiberCount": "8",
+  "typeofCable": "UT",
+  "span": "N/A",
+  "tube": "Standard",
+  "tubeColorCoding": "N/A",
+  "fiberType": "SM",
+  "diameter": "Cable Diameter 8.5 \u00b1 0.5 mm",
+  "tensile": "Max. Tensile Strength Installation: 600 N IEC-60794-1-21-E1",
+  "nescCondition": "N/A",
+  "crush": "Max. Crush Resistance 2000 N/10 cm IEC-60794-1-21-E3",
+  "blowingLength": "N/A",
+  "datasheetURL": "Datasheet - 2F,4F,8F D UTA AY SS LSZH BK - 8.5MM - KH9M.pdf",
+  "isActive": "Y"
+}

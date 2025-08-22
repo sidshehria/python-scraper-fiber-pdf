@@ -1,0 +1,17 @@
+{
+  "cableID": 2,
+  "cableDescription": "96F  Multitube Indoor OFC",
+  "fiberCount": "96",
+  "typeofCable": "MT",
+  "span": "N/A",
+  "tube": "Standard",
+  "tubeColorCoding": "N/A",
+  "fiberType": "SM",
+  "diameter": "Cable Diameter 10.5 \u00b1 0.5 mm 12.0 \u00b1 0.5 mm",
+  "tensile": "Tensile Strength IEC-60794-1-21-E1",
+  "nescCondition": "N/A",
+  "crush": "Crush Resistance 1000 N/100 x 100 mm IEC-60794-1-21-E3",
+  "blowingLength": "N/A",
+  "datasheetURL": "Datasheet  - 24F,96F MTUA SS LSZH BK - Indoor - AR.pdf",
+  "isActive": "Y"
+}
